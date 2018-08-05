@@ -5,12 +5,13 @@ from aiohttp import web
 
 loop = asyncio.get_event_loop()
 
-async def kafka_consumer(app):
+
+async def consume():
     consumer = AIOKafkaConsumer(
         'mypart',
-        loop=app.loop, bootstrap_servers='localhost:9092',
+        loop=loop, bootstrap_servers='localhost:9092',
         group_id=group, max_poll_records=1)
-    # Get cluster layout and join group `my-group`
+    print(f'Connected to Kafak Group {group}')
     await consumer.start()
     try:
         # Consume messages
@@ -21,24 +22,7 @@ async def kafka_consumer(app):
         # Will leave consumer group; perform autocommit if enabled.
         await consumer.stop()
 
-
-async def start_kafka_task(app):
-    app['kafka_listener'] = app.loop.create_task(kafka_consumer(app))
-
-
-async def handle(request):
-    name = request.match_info.get('name', "Anonymous")
-    text = "Hello, " + name
-    return web.Response(text=text)
-
-
 args = sys.argv
-port, group = args[1:]
+group = args[1]
 
-app = web.Application()
-app.add_routes([web.get('/', handle),
-                web.get('/{name}', handle)])
-
-app.on_startup.append(start_kafka_task)
-web.run_app(app, port=int(port))
-
+loop.run_until_complete(consume())

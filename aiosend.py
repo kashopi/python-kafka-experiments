@@ -1,5 +1,5 @@
-import json
-from datetime import datetime
+import sys
+import random
 from aiokafka import AIOKafkaProducer
 import asyncio
 
@@ -11,16 +11,17 @@ async def send_one():
     # Get cluster layout and initial topic/partition leadership information
     await producer.start()
     try:
-        content = {}
-        for i in range(90000):
-            content[str(1)] = "abcdeftejla" * i
-        dump = json.dumps(content)
-        print(f"Message size {len(dump)/1024/1024} MB {len(dump)} bytes")
-        start = datetime.now()
-        await producer.send_and_wait("mypart", str.encode(dump))
-        print(f"Time needed to send: {datetime.now()-start}")
+        calls = []
+        for i in range(0, count):
+            calls.append(
+                producer.send_and_wait(
+                    "mypart", 
+                    str.encode(f"Message {i}")))
+        await asyncio.gather(*calls)
     finally:
         # Wait for all pending messages to be delivered or expire.
         await producer.stop()
 
+args = sys.argv
+count = int(args[1])
 loop.run_until_complete(send_one())

@@ -8,13 +8,16 @@ loop = asyncio.get_event_loop()
 
 async def send_one():
     producer = AIOKafkaProducer(
-        loop=loop, bootstrap_servers='localhost:9092')
+        loop=loop, 
+        bootstrap_servers='localhost:9092')
     # Get cluster layout and initial topic/partition leadership information
     await producer.start()
     try:
         count = 0
         while True:            
-            await producer.send_and_wait("mypart", str.encode(f"Super message {count}"))
+            await producer.send_and_wait(
+                "mypart", 
+                str.encode(f"Message {count}"))
             count = count + 1
             sleep(wait)
     finally:
